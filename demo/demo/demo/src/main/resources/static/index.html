@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD de Países</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="icon" href="/io.ico" type="image/x-icon">
+</head>
+<body>
+<div class="container mt-5">
+    <h1 class="text-center">CRUD de Países</h1>
+
+    <!-- Formulario para agregar o actualizar países -->
+    <div class="card mt-3">
+        <div class="card-header">Agregar o Actualizar País</div>
+        <div class="card-body">
+            <form id="countryForm">
+                <div class="mb-3">
+                    <label for="countryInput" class="form-label">Nombre del país</label>
+                    <input type="text" class="form-control" id="countryInput" placeholder="Introduce el nombre del país" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Guardar País</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabla para listar los países -->
+    <div class="card mt-4">
+        <div class="card-header">Lista de Países</div>
+        <div class="card-body">
+            <table class="table table-striped" id="countriesTable">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>País</th>
+                    <th>Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                <!-- Se insertarán dinámicamente las filas con los países -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Obtener todos los países al cargar la página
+    document.addEventListener('DOMContentLoaded', function() {
+        loadCountries();
+    });
+
+    // Función para cargar todos los países
+    function loadCountries() {
+        fetch('/api/paises')
+            .then(response => response.json())
+            .then(data => {
+                const tableBody = document.querySelector('#countriesTable tbody');
+                tableBody.innerHTML = ''; // Limpiar la tabla
+                data.forEach((pais, index) => {
+                    const row = `<tr>
+                                        <td>${index}</td>
+                                        <td>${pais}</td>
+                                        <td>
+                                            <button class="btn btn-danger" onclick="deleteCountry(${index})">Eliminar</button>
+                                        </td>
+                                     </tr>`;
+                    tableBody.insertAdjacentHTML('beforeend', row);
+                });
+            });
+    }
+
+    // Manejar el envío del formulario para agregar o actualizar un país
+    document.getElementById('countryForm').addEventListener('submit', function(event) {
+        event.preventDefault(); // Evitar que el formulario recargue la página
+
+        const countryName = document.getElementById('countryInput').value;
+
+        fetch('/api/paises', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'text/plain'
+            },
+            body: countryName
+        })
+            .then(response => {
+                if (response.ok) {
+                    alert('País agregado exitosamente');
+                    document.getElementById('countryInput').value = ''; // Limpiar el campo de entrada
+                    loadCountries(); // Recargar la lista de países
+                } else {
+                    alert('Error al agregar el país');
+                }
+            });
+    });
+
+    // Función para eliminar un país
+    function deleteCountry(idPais) {
+        if (confirm('¿Estás seguro de que quieres eliminar este país?')) {
+            fetch(`/api/paises/${idPais}`, {
+                method: 'DELETE'
+            })
+                .then(response => {
+                    if (response.ok) {
+                        alert('País eliminado exitosamente');
+                        loadCountries(); // Recargar la lista de países
+                    } else {
+                        alert('Error al eliminar el país');
+                    }
+                });
+        }
+    }
+</script>
+</body>
+</html>
